@@ -5,7 +5,7 @@ import { GeneratedComponent, ComponentVariant } from "@/types";
 import { Code, Copy, Download, Eye, EyeOff, Check, Play } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import toast from "react-hot-toast";
-import LivePreview from "./LivePreview";
+import IframePreview from "./IframePreview";
 
 interface ComponentPreviewProps {
   component: GeneratedComponent;
@@ -136,7 +136,7 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
 
       {/* Live Preview del componente */}
       {showLivePreview && (
-        <LivePreview
+        <IframePreview
           code={component.code}
           variant={selectedVariant}
           previewProps={component.preview_props}

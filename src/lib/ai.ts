@@ -18,35 +18,37 @@ CATEGORÍA: ${category}
 REQUISITOS ESTRICTOS:
 1. Responde ÚNICAMENTE con JSON válido (sin markdown, sin backticks)
 2. El código debe ser React + TypeScript funcional
-3. Usa solo Tailwind CSS para estilos (sin CSS modules, sin styled-components)
-4. El componente debe ser auto-contenido (todas las dependencias incluidas)
-5. Incluye tipos TypeScript apropiados
-6. Usa lucide-react para iconos si son necesarios
+3. Usa solo Tailwind CSS para estilos
+4. NO uses iconos de lucide-react - usa emojis o texto en su lugar
+5. El componente debe ser auto-contenido
+6. Usa sintaxis function, NO arrow functions
+7. Define props con valores default directos en los parámetros
 
 ESTRUCTURA DEL JSON:
 {
   "name": "NombreDelComponente",
-  "code": "código completo del componente en string",
+  "code": "código completo del componente",
   "category": "${category}",
   "variants": [
     {"name": "default", "props": {}},
     {"name": "small", "props": {"size": "sm"}},
     {"name": "large", "props": {"size": "lg"}}
   ],
-  "preview_props": {"label": "Click me"},
-  "tags": ["animated", "modern", "gradient"]
+  "preview_props": {},
+  "tags": ["animated", "modern"]
 }
 
-EJEMPLO DE CÓDIGO DEL COMPONENTE:
+IMPORTANTE SOBRE preview_props:
+- Para BUTTONS: {"label": "Click me"}
+- Para CARDS: {"title": "Card Title", "description": "Description text"}
+- Para INPUTS: {"placeholder": "Enter text...", "label": "Input Label"}
+- Para BADGES: {"text": "Badge"}
+- Para ALERTS: {"title": "Alert", "message": "This is an alert message"}
+- Para OTROS: Deja preview_props como {} vacío si el componente no necesita props para verse bien
+
+EJEMPLO DE CÓDIGO (SIN ICONOS - USA EMOJIS):
 \`\`\`typescript
-interface ButtonProps {
-  label: string;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'primary' | 'secondary';
-  onClick?: () => void;
-}
-
-export default function Button({ label, size = 'md', variant = 'primary', onClick }: ButtonProps) {
+function Button({ label = 'Button', size = 'md', variant = 'primary', emoji = '✓', onClick }) {
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2 text-base',
@@ -61,15 +63,23 @@ export default function Button({ label, size = 'md', variant = 'primary', onClic
   return (
     <button
       onClick={onClick}
-      className={\`rounded-lg font-medium transition-colors \${sizeClasses[size]} \${variantClasses[variant]}\`}
+      className={'rounded-lg font-medium transition-colors flex items-center gap-2 ' + sizeClasses[size] + ' ' + variantClasses[variant]}
     >
+      {emoji && <span>{emoji}</span>}
       {label}
     </button>
   );
 }
 \`\`\`
 
-${includeVariants ? "INCLUYE AL MENOS 3 VARIANTES (pequeño, mediano, grande o diferentes colores)." : "NO incluyas variantes."}
+REGLAS ADICIONALES:
+- Si necesitas íconos, usa EMOJIS en vez de componentes (ej: ✓ ✕ ➜ ⭐ ❤️ 🔍 ⚙️ 📧 📞 🏠 👤)
+- NO uses imports de ningún tipo
+- NO uses template literals complejos con \${} - usa concatenación simple con +
+- Los componentes deben verse bien SIN necesidad de props externos
+- Usa defaults inteligentes para que el componente se vea completo
+
+${includeVariants ? "INCLUYE AL MENOS 3 VARIANTES con diferentes tamaños o estilos." : "NO incluyas variantes."}
 
 Responde SOLO con el JSON:`;
 
@@ -112,9 +122,35 @@ Responde SOLO con el JSON:`;
     // Parsear JSON
     const result = JSON.parse(cleanedText);
 
-    // Validar estructura
-    if (!result.name || !result.code) {
-      throw new Error("Invalid component structure");
+    // Ajustar preview_props según categoría si están vacíos o incorrectos
+    let previewProps = result.preview_props || {};
+
+    if (Object.keys(previewProps).length === 0) {
+      // Si está vacío, generar props apropiados según categoría
+      switch (category) {
+        case "button":
+          previewProps = { label: "Click me" };
+          break;
+        case "card":
+          previewProps = { title: "Card Title", description: "Description" };
+          break;
+        case "input":
+          previewProps = { label: "Label", placeholder: "Enter text..." };
+          break;
+        case "badge":
+          previewProps = { text: "Badge" };
+          break;
+        case "alert":
+          previewProps = { title: "Alert", message: "This is a message" };
+          break;
+        case "navbar":
+        case "modal":
+        case "form":
+        case "other":
+          // Estos se ven bien sin props
+          previewProps = {};
+          break;
+      }
     }
 
     // Asegurar que tenga las propiedades necesarias
@@ -123,9 +159,24 @@ Responde SOLO con el JSON:`;
       code: result.code,
       category: result.category || category,
       variants: result.variants || [{ name: "default", props: {} }],
-      preview_props: result.preview_props || {},
+      preview_props: previewProps, // ← Usar los props validados
       tags: result.tags || [],
     };
+
+    // // Validar estructura
+    // if (!result.name || !result.code) {
+    //   throw new Error("Invalid component structure");
+    // }
+
+    // // Asegurar que tenga las propiedades necesarias
+    // return {
+    //   name: result.name,
+    //   code: result.code,
+    //   category: result.category || category,
+    //   variants: result.variants || [{ name: "default", props: {} }],
+    //   preview_props: result.preview_props || {},
+    //   tags: result.tags || [],
+    // };
   } catch (error) {
     console.error("Error generating component:", error);
     throw new Error("Failed to generate component");
