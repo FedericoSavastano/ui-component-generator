@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎨 UI Component Generator
 
-## Getting Started
+AI-powered tool to generate React + TypeScript + Tailwind CSS components from natural language descriptions.
 
-First, run the development server:
+[🚀 Live Demo](https://tu-url.vercel.app) | [📹 Video Demo](#)
+
+![Demo](screenshot.png)
+
+## ✨ Features
+
+- **AI-Powered Generation**: Describe components in plain language
+- **Live Preview**: See components rendered in real-time with Tailwind CSS
+- **Edit & Iterate**: Refine components with natural language instructions
+- **Multiple Variants**: Auto-generates size/style variations
+- **Download & Copy**: Export as .tsx files or copy to clipboard
+- **Component Library**: Browse and reuse previously generated components
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **AI**: Groq (Llama 3.3 70B)
+- **Database**: Supabase (PostgreSQL)
+- **Editor**: Monaco Editor
+- **Deploy**: Vercel
+
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/tu-usuario/ui-component-generator.git
+cd ui-component-generator
+npm install
+```
+
+Create `.env.local`:
+
+```env
+GROQ_API_KEY=your_key
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+```
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 💡 Usage Examples
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Generate a Button:**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> "A blue gradient button with rounded corners, white text, and smooth hover animation"
 
-## Learn More
+**Edit Component:**
 
-To learn more about Next.js, take a look at the following resources:
+> "Change the color to green and make it larger"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Key Features Showcase
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Isolated Preview**: Components render in sandbox iframe with independent Tailwind instance
+- **Smart Props**: AI generates appropriate default props based on component type
+- **Variant Generation**: Automatically creates size/color variations
+- **Edit Mode**: Modify existing components with natural language
 
-## Deploy on Vercel
+## 📝 License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

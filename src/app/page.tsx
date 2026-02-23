@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Code2, Sparkles } from "lucide-react";
+import { GeneratedComponent } from "@/types";
 import GeneratorForm from "@/components/GeneratorForm";
 import ComponentPreview from "@/components/ComponentPreview";
-import { GeneratedComponent } from "@/types";
-import { Code2, Sparkles } from "lucide-react";
 
 export default function Home() {
   const [currentComponent, setCurrentComponent] =
     useState<GeneratedComponent | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async (componentId: string) => {
@@ -30,6 +31,10 @@ export default function Home() {
 
   const handleNewComponent = () => {
     setCurrentComponent(null);
+  };
+
+  const handleComponentUpdated = (updatedComponent: GeneratedComponent) => {
+    setCurrentComponent(updatedComponent);
   };
 
   return (
@@ -134,7 +139,10 @@ export default function Home() {
               </div>
             ) : (
               <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-                <ComponentPreview component={currentComponent} />
+                <ComponentPreview
+                  component={currentComponent}
+                  onComponentUpdated={handleComponentUpdated}
+                />
               </div>
             )}
           </div>

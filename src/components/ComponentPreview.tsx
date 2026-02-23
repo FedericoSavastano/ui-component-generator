@@ -2,22 +2,37 @@
 
 import { useState } from "react";
 import { GeneratedComponent, ComponentVariant } from "@/types";
-import { Code, Copy, Download, Eye, EyeOff, Check, Play } from "lucide-react";
+import {
+  Code,
+  Copy,
+  Download,
+  Eye,
+  EyeOff,
+  Check,
+  Play,
+  Edit3,
+} from "lucide-react";
 import Editor from "@monaco-editor/react";
 import toast from "react-hot-toast";
 import IframePreview from "./IframePreview";
+import EditModal from "./EditModal";
 
 interface ComponentPreviewProps {
   component: GeneratedComponent;
+  onComponentUpdated?: (newComponent: GeneratedComponent) => void;
 }
 
-export default function ComponentPreview({ component }: ComponentPreviewProps) {
+export default function ComponentPreview({
+  component,
+  onComponentUpdated,
+}: ComponentPreviewProps) {
   const [showCode, setShowCode] = useState(false);
   const [showLivePreview, setShowLivePreview] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<ComponentVariant>(
     component.variants[0] || { name: "default", props: {} },
   );
   const [copied, setCopied] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleCopyCode = async () => {
     try {
@@ -43,6 +58,37 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
     toast.success("Archivo descargado");
   };
 
+  const handleEdit = async (instructions: string) => {
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          editMode: true,
+          existingCode: component.code,
+          editInstructions: instructions,
+          category: component.category,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Edit failed");
+      }
+
+      toast.success("¡Componente actualizado!");
+
+      // Notificar al padre que el componente cambió
+      if (onComponentUpdated) {
+        onComponentUpdated(data.component);
+      }
+    } catch (error) {
+      toast.error("Error al editar componente");
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -65,6 +111,14 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
         {/* Botones de acción */}
         <div className="flex gap-2 flex-wrap justify-end">
           <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium"
+          >
+            <Edit3 className="w-4 h-4" />
+            Editar
+          </button>
+
+          <button
             onClick={() => setShowLivePreview(!showLivePreview)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
               showLivePreview
@@ -75,6 +129,7 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
             <Play className="w-4 h-4" />
             {showLivePreview ? "Preview ON" : "Preview OFF"}
           </button>
+
           <button
             onClick={() => setShowCode(!showCode)}
             className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
@@ -86,6 +141,7 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
             )}
             {showCode ? "Ocultar" : "Ver"} Código
           </button>
+
           <button
             onClick={handleCopyCode}
             className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
@@ -97,6 +153,7 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
             )}
             {copied ? "Copiado" : "Copiar"}
           </button>
+
           <button
             onClick={handleDownload}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium"
@@ -134,7 +191,7 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
         </div>
       )}
 
-      {/* Live Preview del componente */}
+      {/* Live Preview */}
       {showLivePreview && (
         <IframePreview
           code={component.code}
@@ -170,6 +227,14 @@ export default function ComponentPreview({ component }: ComponentPreviewProps) {
           />
         </div>
       )}
+
+      {/* Modal de edición */}
+      <EditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onEdit={handleEdit}
+        componentName={component.name}
+      />
     </div>
   );
 }

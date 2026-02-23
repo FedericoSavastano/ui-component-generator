@@ -1,10 +1,14 @@
 import Groq from "groq-sdk";
+
 import { ComponentCategory } from "@/types";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY!,
 });
 
+/**
+ * Genera componente desde descripción de texto
+ */
 export async function generateComponent(
   description: string,
   category: ComponentCategory = "other",
@@ -90,7 +94,7 @@ Responde SOLO con el JSON:`;
         {
           role: "system",
           content:
-            "Eres un experto en React y TypeScript. Siempre respondes con JSON válido sin markdown ni texto adicional.",
+            "Eres un experto en React y TypeScript. Siempre respondes con JSON válido, sin markdown ni texto adicional.",
         },
         {
           role: "user",
@@ -107,26 +111,174 @@ Responde SOLO con el JSON:`;
       throw new Error("No response from AI");
     }
 
-    // Limpiar respuesta
+    // Limpiar la respuesta
     let cleanedText = responseText.trim();
-
-    // Remover markdown si existe
     cleanedText = cleanedText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
 
-    // Buscar JSON en el texto
     const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       cleanedText = jsonMatch[0];
     }
 
-    // Parsear JSON
+    try {
+      const result = JSON.parse(cleanedText);
+
+      if (!result.name || !result.code) {
+        throw new Error("Invalid component structure");
+      }
+
+      // Ajustar preview_props según categoría si están vacíos o incorrectos
+      let previewProps = result.preview_props || {};
+
+      if (Object.keys(previewProps).length === 0) {
+        switch (category) {
+          case "button":
+            previewProps = { label: "Click me" };
+            break;
+          case "card":
+            previewProps = { title: "Card Title", description: "Description" };
+            break;
+          case "input":
+            previewProps = { label: "Label", placeholder: "Enter text..." };
+            break;
+          case "badge":
+            previewProps = { text: "Badge" };
+            break;
+          case "alert":
+            previewProps = { title: "Alert", message: "This is a message" };
+            break;
+          case "navbar":
+          case "modal":
+          case "form":
+          case "other":
+            previewProps = {};
+            break;
+        }
+      }
+
+      return {
+        name: result.name,
+        code: result.code,
+        category: result.category || category,
+        variants: result.variants || [{ name: "default", props: {} }],
+        preview_props: previewProps,
+        tags: result.tags || [],
+      };
+    } catch (error) {
+      console.error("Error parsing AI response:");
+      console.error("Raw response:", responseText);
+      console.error("Cleaned text:", cleanedText);
+      console.error("Parse error:", error);
+
+      return {
+        name: "Component",
+        code: "// Error parsing AI response",
+        category,
+        variants: [{ name: "default", props: {} }],
+        preview_props: {},
+        tags: ["error"],
+      };
+    }
+  } catch (error) {
+    console.error("Error generating component:", error);
+    throw new Error("Failed to generate component");
+  }
+}
+
+/**
+ * Edita un componente existente con nuevas instrucciones
+ * Usa Groq (gratis)
+ */
+export async function editComponent(
+  existingCode: string,
+  editInstructions: string,
+  category: ComponentCategory,
+): Promise<any> {
+  const prompt = `Tienes este componente React + Tailwind CSS:
+
+\`\`\`typescript
+${existingCode}
+\`\`\`
+
+INSTRUCCIONES DE EDICIÓN:
+${editInstructions}
+
+Modifica el componente según las instrucciones. Responde ÚNICAMENTE con JSON válido (sin markdown):
+
+{
+  "name": "NombreDelComponente",
+  "code": "código completo modificado",
+  "category": "${category}",
+  "variants": [
+    {"name": "default", "props": {}},
+    {"name": "small", "props": {"size": "sm"}},
+    {"name": "large", "props": {"size": "lg"}}
+  ],
+  "preview_props": {},
+  "tags": ["edited", "improved"]
+}
+
+IMPORTANTE:
+- MANTÉN la estructura general del componente
+- APLICA los cambios solicitados
+- Si piden cambiar colores, cambia las clases de Tailwind apropiadas
+- Si piden cambiar tamaños, ajusta padding, text-size, etc.
+- Si piden agregar elementos, agrégalos manteniendo el estilo
+- Usa function declarations (NO arrow functions)
+- Solo Tailwind CSS para estilos
+- NO uses imports
+- Usa concatenación con + en vez de template literals \${}
+- Usa EMOJIS si necesitas iconos (NO lucide-react)
+
+Responde SOLO con el JSON:`;
+
+  try {
+    console.log("Calling Groq for editing...");
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Eres un experto en React y TypeScript. Editas componentes según instrucciones. Siempre respondes con JSON válido sin markdown.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.5,
+      max_tokens: 3000,
+    });
+
+    const responseText = completion.choices[0]?.message?.content || "";
+
+    if (!responseText) {
+      throw new Error("No response from AI");
+    }
+
+    console.log("AI response received, parsing...");
+
+    // Limpiar respuesta
+    let cleanedText = responseText.trim();
+    cleanedText = cleanedText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
+
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedText = jsonMatch[0];
+    }
+
     const result = JSON.parse(cleanedText);
 
-    // Ajustar preview_props según categoría si están vacíos o incorrectos
+    if (!result.name || !result.code) {
+      throw new Error("Invalid component structure from AI");
+    }
+
+    // Ajustar preview_props según categoría si están vacíos
     let previewProps = result.preview_props || {};
 
     if (Object.keys(previewProps).length === 0) {
-      // Si está vacío, generar props apropiados según categoría
       switch (category) {
         case "button":
           previewProps = { label: "Click me" };
@@ -143,42 +295,21 @@ Responde SOLO con el JSON:`;
         case "alert":
           previewProps = { title: "Alert", message: "This is a message" };
           break;
-        case "navbar":
-        case "modal":
-        case "form":
-        case "other":
-          // Estos se ven bien sin props
+        default:
           previewProps = {};
-          break;
       }
     }
 
-    // Asegurar que tenga las propiedades necesarias
     return {
       name: result.name,
       code: result.code,
       category: result.category || category,
       variants: result.variants || [{ name: "default", props: {} }],
-      preview_props: previewProps, // ← Usar los props validados
-      tags: result.tags || [],
+      preview_props: previewProps,
+      tags: result.tags || ["edited"],
     };
-
-    // // Validar estructura
-    // if (!result.name || !result.code) {
-    //   throw new Error("Invalid component structure");
-    // }
-
-    // // Asegurar que tenga las propiedades necesarias
-    // return {
-    //   name: result.name,
-    //   code: result.code,
-    //   category: result.category || category,
-    //   variants: result.variants || [{ name: "default", props: {} }],
-    //   preview_props: result.preview_props || {},
-    //   tags: result.tags || [],
-    // };
   } catch (error) {
-    console.error("Error generating component:", error);
-    throw new Error("Failed to generate component");
+    console.error("Error editing component:", error);
+    throw new Error("Failed to edit component");
   }
 }
