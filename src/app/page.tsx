@@ -5,6 +5,7 @@ import { Code2, Sparkles } from "lucide-react";
 import { GeneratedComponent } from "@/types";
 import GeneratorForm from "@/components/GeneratorForm";
 import ComponentPreview from "@/components/ComponentPreview";
+import Link from "next/link";
 
 export default function Home() {
   const [currentComponent, setCurrentComponent] =
@@ -148,6 +149,22 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      <footer className="bg-gray-900 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className=" text-sm text-gray-400">
+            © {new Date().getFullYear()} UI Component Generator. Hecho con ✨por{" "}
+            <Link
+              href="https://federicosavastano.vercel.app"
+              className=" text-sm text-gray-100"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Federico Savastano
+            </Link>
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
