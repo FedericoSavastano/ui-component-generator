@@ -161,7 +161,7 @@ function prepareCodeForIframe(
   processedCode = processedCode.replace(/export\s+default\s+/g, "");
 
   // Remover interfaces
-  processedCode = processedCode.replace(/interface\s+\w+\s*{[^}]*}/gs, "");
+  processedCode = processedCode.replace(/interface\s+\w+\s*{[^}]*}/g, "");
 
   // Remover type annotations de parámetros
   processedCode = processedCode.replace(
