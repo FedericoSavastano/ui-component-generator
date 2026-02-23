@@ -2,9 +2,7 @@
 
 AI-powered tool to generate React + TypeScript + Tailwind CSS components from natural language descriptions.
 
-[🚀 Live Demo](https://tu-url.vercel.app) | [📹 Video Demo](#)
-
-![Demo](screenshot.png)
+[🚀 Live Demo](https://ui-component-generator-federicosavastano.vercel.app/) |
 
 ## ✨ Features
 
